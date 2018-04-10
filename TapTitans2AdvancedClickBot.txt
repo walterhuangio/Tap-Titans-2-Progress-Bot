@@ -1,4 +1,4 @@
-﻿// -  Tap Titans 2 AdvancedClickBot by Tune389 [ v1.6 dev 3 ]
+// -  Tap Titans 2 AdvancedClickBot by Tune389 [ v1.6 dev 3 ]
 
 SCREEN_SIZE: 480x800
 
@@ -42,7 +42,7 @@ var #orderLevelMaster 2
 var #orderLevelSkills 3
 
 // ----------- Actions ----------- [ ClanQuest ]
-var #enableClanQuest 0
+var #enableClanQuest 1
 
 //fight the clan boss with max possible hits
 var #clanQuestRunsPerReadyUp 1
@@ -77,13 +77,16 @@ var #stopMasterAfterSkillsUnlocked 0
 //force max level on heavenly strike - option above must be disabled
 var #maxOutHeavenlyStrike 1
 
+// allow upgrade other skills n times, based on your siphon level
+var #upgradeOtherSkillsTimes 3
+
 //press given skills every X seconds
 var #intervalStrike 0
-var #intervalCrit 0
-var #intervalFireBlade 0
-var #intervalMidas 0
+var #intervalCrit 1
+var #intervalFireBlade 1
+var #intervalMidas 1
 var #intervalHeroes 1
-var #intervalShadowClone 0
+var #intervalShadowClone 1
 
 //just level each skill once
 var #justUnlockSkills 1
@@ -114,14 +117,14 @@ var #startBossSecondarySkill 0
 //; 6 = shadow clone
 
 // ----------- Actions ----------- [ Prestige ]
-var #enableAutoprestige 0
-var #prestigeAfterXMinutes 45
+var #enableAutoprestige 1
+var #prestigeAfterXMinutes 35
 
 // ----------- Developer / Expert
 var #maxHitCount 9999999
 
 //show current script time
-var #showCurrentTime 0
+var #showCurrentTime 1
 
 //if you wanna sync the script time with real time you can play around with this value
 var #timeScaleAddition 17
@@ -153,9 +156,10 @@ var #calc1 0
 var #recheckClanQuest 0
 var #skillsUnlocked 0
 var #lastSkillUnlocks 0
+var #upgradeOtherSkillsCounter 0
 
 // ----------- Delays
-var #btnDelay 150
+var #btnDelay 250
 var #hitDelay 40
 var #shipDelay 200
 var #menuSlideDelay 200
@@ -176,7 +180,7 @@ var #colorInfoNumber 475629
 var #colorDia -7970303
 var #colorLevelUpAvailable 1338350
 var #colorBlack 397861
-var #colorStatsButton 3826675
+var #colorStatsButton 3695603
 var #colorGray 2695200
 
 // ----------- TimeSets
@@ -280,17 +284,12 @@ var #resultClanQuest 0
 	#seconds = 0
 	#secondsTotal = 0
 	#minutes = 0
+	#upgradeOtherSkillsCounter = 0
 goto :init
 
 
 // ----------- INIT
 :init
-	CheckApp #checkRunning com.gamehivecorp.taptitans2
-	if #checkRunning == 0
-		RunApp com.gamehivecorp.taptitans2
-		WaitApp com.gamehivecorp.taptitans2
-		sleep 10000
-	endif
 
 	//collect ads
 	if #enablePremiumCollect == 0
@@ -332,13 +331,6 @@ goto :init
 // ----------- PRESS SKILLS
 :pressSkills
 
-	// check running state
-	CheckApp #checkRunning com.gamehivecorp.taptitans2
-	if #checkRunning == 0
-		RunApp com.gamehivecorp.taptitans2
-		sleep 10000
-		goto :init
-	endif
 
 	touchDown 0 #menuCloseX #menuCloseY
 	sleep #btnDelay
@@ -366,36 +358,48 @@ goto :init
 	if #timeDiff >= #intervalStrike and #intervalStrike > 0
 		#lastPressStrike = #secondsTotal
 		touchPress 0 40 710
+		sleep 50
+		touchUp 0
 		#time = #time + 200
 	endif
 	#timeDiff = #secondsTotal - #lastPressHeroes
 	if #timeDiff >= #intervalHeroes and #intervalHeroes > 0
 		#lastPressHeroes = #secondsTotal
 		touchPress 0 360 710
+		sleep 50
+		touchUp 0
 		#time = #time + 200
 	endif
 	#timeDiff = #secondsTotal - #lastPressCrit
 	if #timeDiff >= #intervalCrit and #intervalCrit > 0
 		#lastPressCrit = #secondsTotal
 		touchPress 0 120 710
+		sleep 50
+		touchUp 0
 		#time = #time + 200
 	endif
 	#timeDiff = #secondsTotal - #lastPressFireBlade
 	if #timeDiff >= #intervalFireBlade and #intervalFireBlade > 0
 		#lastPressFireBlade = #secondsTotal
 		touchPress 0 280 710
+		sleep 50
+		touchUp 0
 		#time = #time + 200
 	endif
 	#timeDiff = #secondsTotal - #lastPressMidas
 	if #timeDiff >= #intervalMidas and #intervalMidas > 0
 		#lastPressMidas = #secondsTotal
 		touchPress 0 200 710
+		sleep 50
+		touchUp 0
 		#time = #time + 200
 	endif
 	#timeDiff = #secondsTotal - #lastPressShadowClone
 	if #timeDiff >= #intervalShadowClone and #intervalShadowClone > 0
 		#lastPressShadowClone = #secondsTotal
 		touchPress 0 430 710
+		sleep 50
+		touchUp 0
 		#time = #time + 200
 	endif
 goto :start
@@ -446,7 +450,7 @@ goto :start
 	elseif #actionStepper == #orderLevelSkills and #enableSkills == 1 and  #skillsUnlocked < 5
 		#skillsUnlocked = 0
 		goto :checkSkills
-	elseif #actionStepper == #orderLevelSkills and #enableSkills == 1 and  #skillsUnlocked == 5 and #maxOutHeavenlyStrike == 1
+	elseif #actionStepper == #orderLevelSkills and #enableSkills == 1 and  #skillsUnlocked >= 5 and #maxOutHeavenlyStrike == 1
 		#skillsUnlocked = 0
 		goto :checkSkills
 	elseif #actionStepper == #orderLevelHeroes and #enableHeroes == 1
@@ -539,7 +543,7 @@ goto :runActions
 	sleep #menuPopUpDelay
 	getColor #color1 430 540
 	
-	if #color1 == 6384247
+	if #color1 == 6384245
 		touchDown 0 330 535
 		sleep #btnDelay
 		touchUp 0
@@ -674,11 +678,13 @@ goto :clanQuestClose
 // ----------- LEVEL SKILLS
 :checkSkills
 
+	log #skillCheckStepper #upgradeOtherSkillsCounter #skillsUnlocked
+
 	if #prestige == 0 and #startSkillCheckNow == 0
 		goto :checkSkillsFinish
 	endif
 
-	if #skillsUnlocked == 5 and #justUnlockSkills == 1 and #maxOutHeavenlyStrike == 0
+	if #skillsUnlocked == 5 and #justUnlockSkills == 1 and #maxOutHeavenlyStrike == 0 and #upgradeOtherSkillsCounter >= #upgradeOtherSkillsTimes
 		toast skills unlocked, stop now until next prestige
 		goto :checkSkillsFinish
 	endif
@@ -709,11 +715,12 @@ goto :clanQuestClose
 		
 		#time = #time + 400
 		goto :checkSkills
-	elseif #maxOutHeavenlyStrike == 1 and #skillCheckStepper == 2 and #lastSkillUnlocks == 5
+	elseif #maxOutHeavenlyStrike == 1 and #skillCheckStepper == 2 and #lastSkillUnlocks == 5 and #upgradeOtherSkillsCounter >= #upgradeOtherSkillsTimes - 1
 		goto :checkSkillsFinish
 	elseif #skillCheckStepper <= 7
 		goto :checkSkillsUnlock
 	elseif #skillCheckStepper <= 8
+		#upgradeOtherSkillsCounter = #upgradeOtherSkillsCounter + 1
 		goto :checkSkillsSlideUp
 	endif
 	
@@ -796,7 +803,15 @@ goto :checkSkills
 		#time = #time + 450
 	endif
 	
-	if #justUnlockSkills == 0
+	// after unlock, press more times
+	if #upgradeOtherSkillsCounter < #upgradeOtherSkillsTimes - 1
+		sleep 100
+		touchDown 0 466 660
+		sleep 250
+		touchUp 0
+		sleep 50
+	
+	if #justUnlockSkills == 0 
 		touchPress 0 466 730
 		sleep 50
 		touchPress 0 466 730
@@ -806,7 +821,7 @@ goto :checkSkills
 		#time = #time + 750
 	endif
 	
-	if #skillCheckStepper == 6
+	if #skillCheckStepper == 7
 		goto :checkSkills
 	endif
 goto :checkSkillsSlideDown
@@ -814,7 +829,7 @@ goto :checkSkillsSlideDown
 :checkSkillsFinish
 	#skillCheckStepper = 0
 		
-	if #lastSkillUnlocks < 5 and #skillsUnlocked == 5 and #justUnlockSkills == 1 and #maxOutHeavenlyStrike == 1
+	if #lastSkillUnlocks < 5 and #skillsUnlocked == 5 and #justUnlockSkills == 1 and #maxOutHeavenlyStrike == 1 and #upgradeOtherSkillsCounter >= #upgradeOtherSkillsTimes
 		toast skills unlocked, just going for hs now
 	endif
 	
@@ -1009,6 +1024,8 @@ goto :levelHeroes
 	if #loopDetectionCount == #mainHeroRoundTripLevelUps and #levelMainHero == 1
 		#levelMainHero = 0
 		touchPress 0 #menuCloseX #menuCloseY
+		sleep 50
+		touchUp 0
 		goto :start
 	endif
 		
@@ -1065,35 +1082,35 @@ goto :levelHeroesPressLevelUp
 	#pressLevelUpLoopCount = #pressLevelUpLoopCount + 1
 	
 	touchDown 1 466 540
-	sleep 40
 	touchUp 1
+	sleep 50
 	touchDown 1 466 560
-	sleep 40
 	touchUp 1
+	sleep 50
 	touchDown 1 466 580
-	sleep 40
 	touchUp 1
+	sleep 50
 	touchDown 1 466 600
-	sleep 40
 	touchUp 1
+	sleep 50
 	touchDown 1 466 620
-	sleep 40
 	touchUp 1
+	sleep 50
 	touchDown 1 466 640
-	sleep 40
 	touchUp 1
+	sleep 50
 	touchDown 1 466 660
-	sleep 40
 	touchUp 1
+	sleep 50
 	touchDown 1 466 680
-	sleep 40
 	touchUp 1
+	sleep 50
 	touchDown 1 466 700
-	sleep 40
 	touchUp 1
+	sleep 50
 	touchDown 1 466 720
-	sleep 40
 	touchUp 1
+	sleep 50
 
 	#time = #time + 440
 	
@@ -1282,7 +1299,7 @@ goto :pressSkills
 	sleep #btnDelay
 	#time = #time + #btnDelay
 goto :pressSkills
-
+u
 // ----------- RANDOM ATTACK
 :randomTouch
 	rand #randomX 60 415
